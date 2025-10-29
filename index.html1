@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>اختبار الكيمياء 🧪 (50 سؤال)</title>
+  <style>
+    body {font-family: "Tajawal", sans-serif; background: #f5f6fa; padding: 20px; color: #333;}
+    .container {max-width: 700px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 0 10px #ccc;}
+    .question {margin-bottom: 20px;}
+    .options label {display: block; background: #f0f0f0; padding: 10px; margin: 5px 0; border-radius: 8px; cursor: pointer;}
+    .options input {margin-left: 10px;}
+    .correct {background-color: #d4edda;}
+    .wrong {background-color: #f8d7da;}
+    .btn {padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer;}
+    .btn:hover {background: #0056b3;}
+    .result {font-size: 20px; text-align: center; margin-top: 20px;}
+    #timer {font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 15px; color: #d9534f;}
+    #welcome input, #welcome select {padding: 10px; font-size: 16px; margin: 10px 0; width: 100%;}
+  </style>
+</head>
+<body>
+
+<div class="container" id="welcome">
+  <h2>مرحبًا بك في اختبار الكيمياء 🧪</h2>
+  <label for="studentName">اكتب اسمك:</label>
+  <input type="text" id="studentName" placeholder="اسمك هنا">
+  
+  <label for="studentClass">اختر شعبتك:</label>
+  <select id="studentClass">
+    <option value="">اختر رقم شعبتك</option>
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="5">5</option>
+    <option value="6">6</option>
+    <option value="7">7</option>
+  </select>
+  
+  <button class="btn" id="startBtn">ابدأ الاختبار</button>
+</div>
+
+<div class="container" id="quizContainer" style="display:none;">
+  <h2>اختبار الكيمياء 🧪 (50 سؤال)</h2>
+  <div id="timer">الوقت المتبقي: 30:00</div>
+  <div id="quiz"></div>
+  <button class="btn" id="nextBtn">التالي</button>
+  <div class="result" id="result"></div>
+</div>
+
+<script>
+// بيانات الاختبار
+const quizData = [
+  {q:"من هو أول من قال إن المادة تتكون من جسيمات صغيرة سماها ذرات؟", a:["دالتون","طومسون","رذرفورد","ديموقريطس"], correct:3},
+  {q:"اكتشف الإلكترون العالم:", a:["دالتون","طومسون","بور","شرودنجر"], correct:1},
+  {q:"اكتشف النواة العالم:", a:["بور","ديموقريطس","رذرفورد","دالتون"], correct:2},
+  {q:"من مكونات الذرة:", a:["إلكترونات فقط","بروتونات ونيوترونات وإلكترونات","بروتونات فقط","نيوترونات فقط"], correct:1},
+  {q:"الشحنة الكهربائية للبروتون هي:", a:["سالبة","موجبة","متعادلة","غير معروفة"], correct:1},
+  {q:"الشحنة الكهربائية للإلكترون هي:", a:["موجبة","سالبة","متعادلة","صفر"], correct:1},
+  {q:"النيوترون يحمل شحنة:", a:["سالبة","موجبة","متعادلة","مزدوجة"], correct:2},
+  {q:"تتركز كتلة الذرة في:", a:["الإلكترونات","النواة","المدار الأخير","مستويات الطاقة"], correct:1},
+  {q:"الإلكترونات توجد في:", a:["داخل النواة","حول النواة","داخل البروتون","في الفراغ"], correct:1},
+  {q:"العدد الذري للعنصر يساوي عدد:", a:["النيوترونات","البروتونات","الكتلة","الإلكترونات + النيوترونات"], correct:1},
+  // يمكنك إضافة بقية الأسئلة هنا بنفس الصيغة
+];
+
+let current = 0;
+let score = 0;
+let timeLeft = 30 * 60;
+let studentName = "";
+let studentClass = "";
+
+const welcomeEl = document.getElementById("welcome");
+const startBtn = document.getElementById("startBtn");
+const quizContainer = document.getElementById("quizContainer");
+const quizEl = document.getElementById("quiz");
+const nextBtn = document.getElementById("nextBtn");
+const resultEl = document.getElementById("result");
+const timerEl = document.getElementById("timer");
+
+// بدء الاختبار
+startBtn.onclick = ()=>{
+  studentName = document.getElementById("studentName").value.trim();
+  studentClass = document.getElementById("studentClass").value;
+  if(studentName === "") return alert("الرجاء كتابة اسمك!");
+  if(studentClass === "") return alert("الرجاء اختيار رقم شعبتك!");
+  
+  welcomeEl.style.display = "none";
+  quizContainer.style.display = "block";
+  loadQuestion();
+  startTimer();
+};
+
+function formatTime(sec){
+  const m = Math.floor(sec/60).toString().padStart(2,"0");
+  const s = (sec%60).toString().padStart(2,"0");
+  return `${m}:${s}`;
+}
+
+let timer;
+function startTimer(){
+  timer = setInterval(()=>{
+    timeLeft--;
+    timerEl.textContent = `الوقت المتبقي: ${formatTime(timeLeft)}`;
+    if(timeLeft <= 0){
+      clearInterval(timer);
+      endQuiz();
+    }
+  },1000);
+}
+
+function loadQuestion() {
+  const q = quizData[current];
+  quizEl.innerHTML = `
+    <div class="question"><b>${current+1}. ${q.q}</b></div>
+    <div class="options">
+      ${q.a.map((opt,i)=>`<label><input type="radio" name="answer" value="${i}"> ${opt}</label>`).join("")}
+    </div>`;
+  resultEl.textContent = "";
+}
+
+function checkAnswer() {
+  const selected = document.querySelector('input[name="answer"]:checked');
+  if(!selected) return alert("اختر إجابة أولاً!");
+  const answer = parseInt(selected.value);
+  const labels = document.querySelectorAll(".options label");
+  labels.forEach(l => l.classList.remove("correct","wrong"));
+
+  if(answer === quizData[current].correct){
+    labels[answer].classList.add("correct");
+    score++;
+    resultEl.textContent = "✅ إجابة صحيحة!";
+  } else {
+    labels[answer].classList.add("wrong");
+    labels[quizData[current].correct].classList.add("correct");
+    resultEl.textContent = `❌ إجابة خاطئة! الإجابة الصحيحة: ${quizData[current].a[quizData[current].correct]}`;
+  }
+}
+
+function endQuiz(){
+  quizEl.innerHTML = "";
+  nextBtn.style.display = "none";
+  timerEl.textContent = "انتهى الوقت!";
+  resultEl.innerHTML = `⏰ انتهى الاختبار.<br>الاسم: <b>${studentName}</b><br>الشعبة: <b>${studentClass}</b><br>النتيجة: <b>${score} من ${quizData.length}</b>`;
+}
+
+nextBtn.onclick = ()=>{
+  checkAnswer();
+  setTimeout(()=>{
+    current++;
+    if(current < quizData.length){
+      loadQuestion();
+    } else {
+      clearInterval(timer);
+      endQuiz();
+    }
+  },1500);
+};
+</script>
+
+</body>
+</html>
